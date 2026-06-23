@@ -1,4 +1,4 @@
-module go-docker-jenkins
+module go-ecr-jenkins
 
 go 1.24
 
