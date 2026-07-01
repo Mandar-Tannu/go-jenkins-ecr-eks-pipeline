@@ -31,24 +31,33 @@ func getEnv(key string) string {
 }
 
 func connectDB(prefix string) *sql.DB {
-	dsn := "host=" + getEnv(prefix+"_HOST") +
-	" port=" + getEnv(prefix+"_PORT") +
-	" user=" + getEnv(prefix+"_USER") +
-	" password=" + getEnv(prefix+"_PASSWORD") +
-	" dbname=" + getEnv(prefix+"_NAME") +
-	" sslmode=" + getEnv(prefix+"_SSLMODE")
 
+	log.Println("DB STEP 1 : Reading environment variables")
+
+	dsn := "host=" + getEnv(prefix+"_HOST") +
+		" port=" + getEnv(prefix+"_PORT") +
+		" user=" + getEnv(prefix+"_USER") +
+		" password=" + getEnv(prefix+"_PASSWORD") +
+		" dbname=" + getEnv(prefix+"_NAME") +
+		" sslmode=" + getEnv(prefix+"_SSLMODE")
+
+	log.Println("DB STEP 2 : DSN created")
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		log.Fatalf("level=FATAL service=go-app error=db_open_failed db=%s err=%v", prefix, err)
+		log.Fatalf("DB STEP 3 FAILED : sql.Open : %v", err)
 	}
+
+	log.Println("DB STEP 3 : sql.Open successful")
+
+	log.Println("DB STEP 4 : Calling db.Ping()")
 
 	if err := db.Ping(); err != nil {
-		log.Fatalf("level=FATAL service=go-app error=db_ping_failed db=%s err=%v", prefix, err)
+		log.Fatalf("DB STEP 4 FAILED : db.Ping : %v", err)
 	}
 
-	log.Printf("level=INFO service=go-app event=db_connected db=%s instance=%s", prefix, instanceID)
+	log.Println("DB STEP 5 : Database Ping Successful")
+
 	return db
 }
 
@@ -57,7 +66,10 @@ func initDatabase() {
 	createTable(rdsDB)
 }
 
-func createTable(db *sql.DB){
+func createTable(db *sql.DB) {
+
+	log.Println("TABLE STEP 1 : Creating users table")
+
 	query := `
 	CREATE TABLE IF NOT EXISTS users(
 		id SERIAL PRIMARY KEY,
@@ -72,10 +84,10 @@ func createTable(db *sql.DB){
 	`
 
 	if _, err := db.Exec(query); err != nil {
-		log.Fatalf("level=FATAL service=go-app error=create_table_failed err=%v", err)
+		log.Fatalf("TABLE STEP 2 FAILED : %v", err)
 	}
 
-	log.Printf("level=INFO service=go-app event=table_ready table=users instance=%s", instanceID)
+	log.Println("TABLE STEP 2 : Table Ready")
 }
 
 /* HTTP HANDLERS */
