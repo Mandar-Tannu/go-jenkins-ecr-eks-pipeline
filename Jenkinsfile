@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION = "ap-south-1"
-        AWS_ACCOUNT_ID = "340541183493"
+        AWS_ACCOUNT_ID = "509124060818"
         ECR_REPOSITORY = "go-jenkins-ecr-eks-pipeline"
         IMAGE_NAME = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
         IMAGE_TAG = "${BUILD_NUMBER}"
