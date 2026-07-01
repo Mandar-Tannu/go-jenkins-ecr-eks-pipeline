@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: go-app-config
+
+data:
+  RDS_DB_HOST: "jenkins-postgres.cfq4ywwa84l9.ap-south-1.rds.amazonaws.com"
+  RDS_DB_PORT: "5432"
+  RDS_DB_NAME: "postgres"
+  RDS_DB_SSLMODE: "require"
+  S3_BUCKET_NAME: "telecom-kyc-docs-mandar"
