@@ -31,33 +31,24 @@ func getEnv(key string) string {
 }
 
 func connectDB(prefix string) *sql.DB {
-
-	log.Println("DB STEP 1 : Reading environment variables")
-
 	dsn := "host=" + getEnv(prefix+"_HOST") +
-		" port=" + getEnv(prefix+"_PORT") +
-		" user=" + getEnv(prefix+"_USER") +
-		" password=" + getEnv(prefix+"_PASSWORD") +
-		" dbname=" + getEnv(prefix+"_NAME") +
-		" sslmode=" + getEnv(prefix+"_SSLMODE")
+	" port=" + getEnv(prefix+"_PORT") +
+	" user=" + getEnv(prefix+"_USER") +
+	" password=" + getEnv(prefix+"_PASSWORD") +
+	" dbname=" + getEnv(prefix+"_NAME") +
+	" sslmode=" + getEnv(prefix+"_SSLMODE")
 
-	log.Println("DB STEP 2 : DSN created")
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		log.Fatalf("DB STEP 3 FAILED : sql.Open : %v", err)
+		log.Fatalf("level=FATAL service=go-app error=db_open_failed db=%s err=%v", prefix, err)
 	}
-
-	log.Println("DB STEP 3 : sql.Open successful")
-
-	log.Println("DB STEP 4 : Calling db.Ping()")
 
 	if err := db.Ping(); err != nil {
-		log.Fatalf("DB STEP 4 FAILED : db.Ping : %v", err)
+		log.Fatalf("level=FATAL service=go-app error=db_ping_failed db=%s err=%v", prefix, err)
 	}
 
-	log.Println("DB STEP 5 : Database Ping Successful")
-
+	log.Printf("level=INFO service=go-app event=db_connected db=%s instance=%s", prefix, instanceID)
 	return db
 }
 
@@ -66,10 +57,7 @@ func initDatabase() {
 	createTable(rdsDB)
 }
 
-func createTable(db *sql.DB) {
-
-	log.Println("TABLE STEP 1 : Creating users table")
-
+func createTable(db *sql.DB){
 	query := `
 	CREATE TABLE IF NOT EXISTS users(
 		id SERIAL PRIMARY KEY,
@@ -84,10 +72,10 @@ func createTable(db *sql.DB) {
 	`
 
 	if _, err := db.Exec(query); err != nil {
-		log.Fatalf("TABLE STEP 2 FAILED : %v", err)
+		log.Fatalf("level=FATAL service=go-app error=create_table_failed err=%v", err)
 	}
 
-	log.Println("TABLE STEP 2 : Table Ready")
+	log.Printf("level=INFO service=go-app event=table_ready table=users instance=%s", instanceID)
 }
 
 /* HTTP HANDLERS */
@@ -196,8 +184,6 @@ func main() {
 	// log format: timestamp + file:line
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	log.Println("========== STEP 1 : Application Started ==========")
-
 	host, err := os.Hostname()
 	if err != nil {
 		instanceID = "unknown-instance"
@@ -205,34 +191,21 @@ func main() {
 		instanceID = host
 	}
 
-	log.Printf("STEP 2 : Hostname = %s", instanceID)
+	log.Printf("level=INFO service=go-app event=app_start instance=%s", instanceID)
 
-	log.Println("STEP 3 : Loading AWS Configuration...")
-
-	cfg, err := config.LoadDefaultConfig(
-		context.TODO(),
-		config.WithRegion("ap-south-1"),
-	)
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("ap-south-1"))
 	if err != nil {
-		log.Fatalf("STEP 3 FAILED : AWS config failed : %v", err)
+		log.Fatalf("AWS config failed: %v", err)
 	}
-
-	log.Println("STEP 4 : AWS Configuration Loaded Successfully")
-
 	awsCfg = cfg
 
-	log.Println("STEP 5 : Initializing Database...")
-
 	initDatabase()
-
-	log.Println("STEP 6 : Database Initialized Successfully")
 
 	http.HandleFunc("/", formHandler)
 	http.HandleFunc("/submit", submitHandler)
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/ready", readinessHandler)
 
-	log.Println("STEP 7 : Starting HTTP Server on port 8080")
-
+	log.Printf("level=INFO service=go-app event=server_started port=8080 instance=%s", instanceID)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
