@@ -184,6 +184,8 @@ func main() {
 	// log format: timestamp + file:line
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
+	log.Println("========== STEP 1 : Application Started ==========")
+
 	host, err := os.Hostname()
 	if err != nil {
 		instanceID = "unknown-instance"
@@ -191,21 +193,34 @@ func main() {
 		instanceID = host
 	}
 
-	log.Printf("level=INFO service=go-app event=app_start instance=%s", instanceID)
+	log.Printf("STEP 2 : Hostname = %s", instanceID)
 
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("ap-south-1"))
+	log.Println("STEP 3 : Loading AWS Configuration...")
+
+	cfg, err := config.LoadDefaultConfig(
+		context.TODO(),
+		config.WithRegion("ap-south-1"),
+	)
 	if err != nil {
-		log.Fatalf("AWS config failed: %v", err)
+		log.Fatalf("STEP 3 FAILED : AWS config failed : %v", err)
 	}
+
+	log.Println("STEP 4 : AWS Configuration Loaded Successfully")
+
 	awsCfg = cfg
 
+	log.Println("STEP 5 : Initializing Database...")
+
 	initDatabase()
+
+	log.Println("STEP 6 : Database Initialized Successfully")
 
 	http.HandleFunc("/", formHandler)
 	http.HandleFunc("/submit", submitHandler)
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/ready", readinessHandler)
 
-	log.Printf("level=INFO service=go-app event=server_started port=8080 instance=%s", instanceID)
+	log.Println("STEP 7 : Starting HTTP Server on port 8080")
+
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
